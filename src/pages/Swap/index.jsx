@@ -1,21 +1,15 @@
 import Button from '@/components/Button';
-import Container from '@/components/Container';
-import LoadingIndicator from '@/components/LoadingIndicator';
-import downIcon from '@/images/icons/arrow-down.png';
-import swapIcon from '@/images/icons/arrow-swap.png';
-import solIcon from '@/images/icons/solana.png';
-import sunbixIcon from '@/images/icons/sunbix.png';
-import swapAbi from '@/services/abis/swap.json';
-import useAllowance from '@/services/hooks/useAllowance';
-import useBalances from '@/services/hooks/useBalances';
-import useCallContract from '@/services/hooks/useCallContract';
-import { formatMoney } from '@/utils';
-import { SOL_TOKEN, SUNBIX_TOKEN, SWAP_CONTRACT } from '@/utils/constants';
-import { InputNumber, Spin, notification } from 'antd';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useReadContract } from 'wagmi';
+import { ConnectButton, useCurrentAccount as useAccount } from '@mysten/dapp-kit';
+import { AppContext } from '@/context/AppContext';
+
+import { CetusSwap } from '@cetusprotocol/terminal'
+import '@cetusprotocol/terminal/dist/style.css'
 import styled from 'styled-components';
-import { formatUnits, parseUnits } from 'viem';
-import { useAccount, useReadContract } from 'wagmi';
+import { useContext } from 'react';
+import Container from '@/components/Container';
+import { Spin } from 'antd';
+
 
 const Wrapper = styled.div`
   display: flex;
@@ -221,214 +215,27 @@ const Wrapper = styled.div`
 `;
 
 const Swap = () => {
-  const { address } = useAccount();
-  const { isLoading, data, refetch } = useBalances({ address });
-  const [amount, setAmount] = useState(undefined);
-  const [swapType, setSwapType] = useState('sol');
-  const {
-    allowance,
-    error: errorApprove,
-    approve,
-    isLoading: isLoadingApprove,
-    isConfirmed: isConfirmedApprove
-  } = useAllowance(address, swapType === 'sol' ? SOL_TOKEN : SUNBIX_TOKEN);
-
-  const { call, isPending, isConfirming, isConfirmed, error } = useCallContract(SWAP_CONTRACT, swapAbi, 'swap', [
-    amount
-  ]);
-
-  const resultFeeRate = useReadContract({
-    abi: swapAbi,
-    address: SWAP_CONTRACT,
-    functionName: 'feeRate'
-  });
-
-  const resultSubRate = useReadContract({
-    abi: swapAbi,
-    address: SWAP_CONTRACT,
-    functionName: 'subRate'
-  });
-
-  const [tokenFrom, tokenTo] = useMemo(() => {
-    const tokenFrom = {
-      symbol: swapType === 'sol' ? 'SOL' : 'SBX',
-      balance: data?.[swapType]
-    };
-    const tokenTo = {
-      symbol: swapType === 'sol' ? 'SBX' : 'SOL',
-      balance: data?.[swapType === 'sol' ? 'sunbix' : 'sol']
-    };
-    return [tokenFrom, tokenTo];
-  }, [swapType, data]);
-
-  const feeRate = useMemo(() => {
-    return resultFeeRate?.data || 0;
-  }, [resultFeeRate]);
-
-  const exChangeRate = useMemo(() => {
-    return resultSubRate?.data || 0;
-  }, [resultSubRate]);
-
-  const exchange = useMemo(() => {
-    if (exChangeRate === 0) return 0;
-    return swapType === 'sol' ? (amount || 0) * exChangeRate : (amount || 0) / exChangeRate;
-  }, [swapType, amount, exChangeRate]);
-
-  const output = useMemo(() => {
-    if (swapType === 'sol') return exchange;
-    return (exchange * (100 - feeRate)) / 100;
-  }, [exchange, feeRate, swapType]);
-
-  const onPick = useCallback(
-    (percent) => {
-      setAmount(parseFloat((tokenFrom.balance * percent).toFixed(4)));
-    },
-    [tokenFrom.balance]
-  );
-
-  const onChangeSwap = useCallback(() => {
-    setSwapType(swapType === 'sol' ? 'sunbix' : 'sol');
-    setAmount(0);
-  }, [swapType]);
-
-  const connect = useCallback(() => {
-    document.getElementById('btn-connect').click();
-  }, []);
-
-  const onSwap = useCallback(
-    async (isConfirmApprove = false) => {
-      //check allowance
-      if (formatUnits(allowance || 0, 18) >= amount || isConfirmApprove) {
-        await call('swap', [parseUnits(amount?.toString() || '0', 18), swapType === 'sol' ? true : false]);
-      } else {
-        await approve();
-      }
-    },
-    [allowance, amount, approve, call, swapType]
-  );
-
-  useEffect(() => {
-    if (error) {
-      notification.error({
-        message: error?.shortMessage || error?.message
-      });
-    }
-  }, [error]);
-
-  useEffect(() => {
-    if (errorApprove) {
-      notification.error({
-        message: errorApprove?.shortMessage || errorApprove?.message
-      });
-    }
-  }, [errorApprove]);
-
-  useEffect(() => {
-    if (isConfirmedApprove) {
-      onSwap(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConfirmedApprove]);
-
-  useEffect(() => {
-    if (isConfirmed) {
-      refetch();
-      notification.success({
-        message: 'Swap successfully!'
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConfirmed]);
+  const { walletAddress: address, suiName } = useContext(AppContext);
 
   return (
     <Container>
       <Wrapper>
         <div className='swap-box-wrapper'>
-          <Spin spinning={isLoading || resultFeeRate?.isLoading || resultSubRate?.isLoading}>
-            <div className='swap-box'>
-              <div className='title'>Swap Token</div>
-              <div className='token-box'>
-                <div className='input-gr'>
-                  <InputNumber
-                    value={amount}
-                    onChange={(value) => setAmount(value)}
-                    placeholder='0'
-                    max={tokenFrom.balance}
-                  />
-                  <div className='token-info'>
-                    <div className='icon'>
-                      {swapType === 'sol' ? <img src={solIcon} alt='sol' /> : <img src={sunbixIcon} alt='sunbix' />}
-                    </div>
-                    <div className='name'>{tokenFrom.symbol}</div>
-                  </div>
-                </div>
-                <div className='balance'>
-                  Balance: {formatMoney(tokenFrom.balance)} {tokenFrom.symbol}
-                </div>
-                <div className='quick-picks'>
-                  <div className='quick-pick' onClick={() => onPick(0.25)}>
-                    25%
-                  </div>
-                  <div className='quick-pick' onClick={() => onPick(0.5)}>
-                    50%
-                  </div>
-                  <div className='quick-pick' onClick={() => onPick(0.75)}>
-                    75%
-                  </div>
-                  <div className='quick-pick' onClick={() => onPick(1)}>
-                    MAX
-                  </div>
-                </div>
-              </div>
-              <div className='down' onClick={() => onChangeSwap()}>
-                <img src={downIcon} alt='down' />
-              </div>
-              <div className='token-box'>
-                <div className='input-gr'>
-                  <InputNumber value={exchange} disabled />
-                  <div className='token-info'>
-                    <div className='icon'>
-                      {swapType === 'sol' ? <img src={sunbixIcon} alt='sunbix' /> : <img src={solIcon} alt='sol' />}
-                    </div>
-                    <div className='name'>{tokenTo.symbol}</div>
-                  </div>
-                </div>
-                <div className='balance'>
-                  Balance: {formatMoney(tokenTo.balance)} {tokenTo.symbol}
-                </div>
-              </div>
-              <div className='exchange'>
-                1 SOL <img src={swapIcon} alt='swap' /> {formatMoney(exChangeRate)} SUNBIX
-              </div>
-              <div className='infos'>
-                <div className='info'>
-                  <div className='label'>Slippage Tolerance</div>
-                  <div className='value'>{swapType === 'sunbix' ? feeRate : 0}%</div>
-                </div>
-                <div className='info'>
-                  <div className='label'>Output</div>
-                  <div className='value'>{formatMoney(output)}</div>
-                </div>
-              </div>
-              {!address ? (
-                <Button variant='primary' onClick={connect}>
-                  Connect Wallet
-                </Button>
-              ) : (
-                <Button variant='primary' onClick={() => onSwap(false)} disabled={!amount || amount <= 0 || isPending}>
-                  Swap
-                </Button>
-              )}
-            </div>
-          </Spin>
+          <CetusSwap initProps={{
+            displayMode: "Integrated",
+            defaultFromToken: "0xf1f9e54271add673f6bbf6fc802c053b95e1d469a76f7e7d6693f1a966caa006::credit_token::CREDIT_TOKEN",
+            defaultToToken: "0x2::sui::SUI",
+            themeType: "Dark",
+            theme: { "bg_primary": "#1B242C", "primary": "#72c1f7", "text_primary": "#FFFFFF", "text_secondary": "#909CA4", "success": "#68FFD8", "warning": "#FFCA68", "error": "#ff5073", "btn_text": "#222222" },
+            independentWallet: false
+          }} />
         </div>
         <div className='chart'>
           <div id='dexscreener-embed'>
-            <iframe src='https://dexscreener.com/bsc/0x9f5a0ad81fe7fd5dfb84ee7a0cfb83967359bd90?embed=1&theme=dark&trades=0&info=0' />
+            <iframe src='https://dexscreener.com/sui/0x1b06371d74082856a1be71760cf49f6a377d050eb57afd017f203e89b09c89a2?embed=1&theme=dark&trades=0&info=0' />
           </div>
         </div>
       </Wrapper>
-      {(isLoading || isLoadingApprove || isConfirming || isPending) && <LoadingIndicator />}
     </Container>
   );
 };

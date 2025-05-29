@@ -14,6 +14,7 @@ import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 import ButtonNavBar from './components/ButtonNavBar';
 import DrawerNavBar from './components/DrawerNavBar';
 import { HeaderUrl } from './data/HeaderUrl';
+import LoginButton from '../Login';
 
 const { Header } = Layout;
 
@@ -143,80 +144,6 @@ const NavRight = styled.div`
 `;
 
 const HeaderBar = () => {
-  const { user, login, logout } = useUser((state) => state);
-  const { isLoggedIn, address: curAddress } = user;
-  const { data: signMessageData, isLoading: isLoadingSign, signMessage, isError } = useSignMessage();
-  const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
-  const { openConnectModal } = useConnectModal();
-  const [open, setOpen] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const showDrawer = () => {
-    setOpen(!open);
-  };
-
-  const handleOpenConnectWallet = () => {
-    openConnectModal && openConnectModal();
-  };
-
-  const handleSignMessage = async () => {
-    setIsLoading(true);
-    try {
-      const { nonce } = await sunbixService.fetchNonce({ address });
-      const message = `${nonce}`;
-      signMessage({ message });
-    } catch (error) {
-      console.log({ error });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const signOut = async () => {
-    await logout();
-    disconnect();
-  };
-
-  useEffect(() => {
-    if (!isConnected) {
-      signOut();
-    } else if (isConnected && !isLoggedIn) {
-      handleSignMessage();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected]);
-
-  useEffect(() => {
-    if (signMessageData) {
-      login(address, signMessageData);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signMessageData]);
-
-  useEffect(() => {
-    if (isError) {
-      signOut();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isError]);
-
-  useEffect(() => {
-    if (curAddress && address && curAddress.toLowerCase() !== address.toLowerCase()) {
-      signOut();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address]);
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      signOut();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoggedIn]);
-
   return (
     <Wrapper>
       <Nav>
@@ -249,28 +176,9 @@ const HeaderBar = () => {
           ))}
         </NavMiddle>
         <NavRight>
-          {isConnected && address && isLoggedIn ? (
-            <Flex gap={12} className='user' onClick={() => disconnect()}>
-              {shorten(address)} <LogoutOutlined />
-            </Flex>
-          ) : (
-            <Button id='btn-connect' variant='secondary' onClick={handleOpenConnectWallet}>
-              Connect Wallet
-            </Button>
-          )}
-          <div onClick={showDrawer} className='draw'>
-            <ButtonNavBar />
-          </div>
+          <LoginButton />
         </NavRight>
       </Nav>
-      <DrawerNavBar
-        open={open}
-        handleOpenConnectWallet={handleOpenConnectWallet}
-        signOut={signOut}
-        isLoggedIn={isConnected && address && isLoggedIn}
-        address={address}
-      />
-      {(isLoading || isLoadingSign) && <LoadingIndicator />}
     </Wrapper>
   );
 };
