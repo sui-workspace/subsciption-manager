@@ -2,7 +2,7 @@ import { useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 
-import Footer from '../Footer/index.jsx';
+import Footer from '../Footer/index.js';
 import Header from '../Header/index.jsx';
 
 const Wrapper = styled.div`
@@ -24,7 +24,7 @@ const Wrapper = styled.div`
   }
 `;
 
-const Container = ({ children, full }) => {
+const Container = ({ children, full }: { children: React.ReactNode, full: boolean }) => {
   const { pathname } = useLocation();
   useLayoutEffect(() => {
     window.scrollTo(0, 0);

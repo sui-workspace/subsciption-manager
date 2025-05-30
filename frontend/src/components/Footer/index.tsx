@@ -3,12 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import Button from '../Button';
+import { Theme } from '@/utils/theme';
 
-const Wrapper = styled.div`
+interface WrapperProps {
+  theme: Theme
+}
+
+const Wrapper = styled.div<WrapperProps>`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  background-color: ${({ theme }) => theme.colors.bg};
+  background-color: ${({ theme }: { theme: Theme }) => theme.colors.bg};
   padding: 120px 32px;
   color: ${({ theme }) => theme.colors.white};
   flex-wrap: wrap;
@@ -63,7 +68,7 @@ const FooterRight = styled.div`
   }
 `;
 
-const CopryRight = styled.div`
+const CopryRight = styled.div<WrapperProps>`
   text-align: center;
   background-color: ${({ theme }) => theme.colors.bg};
   color: ${({ theme }) => theme.colors.white};
@@ -79,7 +84,7 @@ export default function Footer() {
       message: 'Email send successfully'
     });
   };
-  const onFinishFailed = (errorInfo) => {
+  const onFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
   };
 
@@ -93,7 +98,7 @@ export default function Footer() {
             <img src='logo.png' alt='' />
           </div>
           <div className='ba-h6'>THE NEXT GENERATION OF DEFI</div>
-          <Button variant='outline' onClick={() => navigate('/farm')}>
+          <Button variant='outline' onClick={() => navigate('/farm')} disabled={false}>
             Trade Now!
           </Button>
         </FooterLeft>
@@ -122,9 +127,14 @@ export default function Footer() {
           <div className='ba-lg-normal'>support@sbxchain.com</div>
           <div className='ba-xl-strong'>NEWSLETTER</div>
           <div className='footer-mail'>
-            <Form name='basic' onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete='off'>
+            <Form
+              form={form}
+              name='basic'
+              onFinish={onFinish}
+              onFinishFailed={onFinishFailed}
+              autoComplete='off'
+            >
               <Form.Item
-                form={form}
                 name='email'
                 rules={[
                   {
@@ -136,7 +146,7 @@ export default function Footer() {
                 <Input size='large' prefix={<img src='mail-icon.svg' alt='' />} />
               </Form.Item>
               <Form.Item>
-                <Button variant='primary'>Send</Button>
+                <Button variant='primary' disabled={false} onClick={() => { }}>Send</Button>
               </Form.Item>
             </Form>
           </div>

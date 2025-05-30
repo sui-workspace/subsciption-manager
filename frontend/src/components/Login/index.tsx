@@ -55,8 +55,8 @@ function LoginButton() {
   return (
     <>
       {walletAddress ? (
-        <Button variant='primary' onClick={disconnectWallet}>
-          <Flex gap={12} className='user' onClick={() => disconnect()}>
+        <Button variant='primary' disabled={false} onClick={() => { disconnectWallet() }}>
+          <Flex gap={12} className='user'>
             {shorten(walletAddress)}
             <LogoutOutlined />
           </Flex>
@@ -66,7 +66,7 @@ function LoginButton() {
 
         <ConnectModal
           trigger={
-            <Button variant='primary' disabled={!!walletAddress}>
+            <Button variant='primary' onClick={undefined} disabled={!!walletAddress}>
               Connect Wallet
             </Button>
           }

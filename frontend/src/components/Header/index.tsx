@@ -15,10 +15,18 @@ import ButtonNavBar from './components/ButtonNavBar';
 import DrawerNavBar from './components/DrawerNavBar';
 import { HeaderUrl } from './data/HeaderUrl';
 import LoginButton from '../Login';
+import { Theme } from '@/utils/theme';
 
 const { Header } = Layout;
 
-const Wrapper = styled.div`
+
+interface WrapperProps {
+  theme: Theme,
+
+}
+
+
+const Wrapper = styled.div<WrapperProps>`
   height: 64px;
   .ant-layout-header {
     padding: 0 32px;
@@ -44,7 +52,7 @@ const Wrapper = styled.div`
   }
 `;
 
-const Nav = styled(Header)`
+const Nav = styled(Header)<WrapperProps>`
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -57,7 +65,7 @@ const Nav = styled(Header)`
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
-const NavMiddle = styled(Space)`
+const NavMiddle = styled(Space)<WrapperProps>`
   color: ${({ theme }) => theme.colors.white};
   gap: ${({ theme }) => theme.spacing.gapSmall};
   position: relative;
@@ -133,9 +141,9 @@ const NavMiddle = styled(Space)`
   }
 `;
 
-const NavRight = styled.div`
+const NavRight = styled.div<WrapperProps>`
   display: flex;
-  gap: ${({ theme }) => theme.gapSmall};
+  gap: ${({ theme }) => theme.spacing.gapSmall};
   @media (max-width: 992px) {
     button:nth-child(1) {
       display: none;
@@ -144,6 +152,7 @@ const NavRight = styled.div`
 `;
 
 const HeaderBar = () => {
+  const navigate = useNavigate();
   return (
     <Wrapper>
       <Nav>

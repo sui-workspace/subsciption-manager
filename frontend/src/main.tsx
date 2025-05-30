@@ -1,23 +1,20 @@
-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConfigProvider } from 'antd';
 import { createRoot } from 'react-dom/client';
 import { ThemeProvider } from 'styled-components';
+import type { FC } from 'react';
 
-import App from './App.jsx';
+import App from './App';
 import './index.scss';
-import { theme } from './utils/theme.js';
+import { theme } from './utils/theme';
 
 import { createNetworkConfig, lightTheme, SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
-
 import { getFullnodeUrl } from '@mysten/sui/client';
-import { createContext } from 'react';
-import { AppContextProvider } from './context/AppContext.jsx';
+import { AppContextProvider } from './context/AppContext';
+
 const { networkConfig } = createNetworkConfig({
   mainnet: { url: getFullnodeUrl('mainnet') },
 });
-
-
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,9 +24,10 @@ const queryClient = new QueryClient({
   }
 });
 
+const rootElement = document.getElementById('root');
+if (!rootElement) throw new Error('Failed to find the root element');
 
-
-createRoot(document.getElementById('root')).render(
+const AppRoot: React.FC = () => (
   <QueryClientProvider client={queryClient}>
     <SuiClientProvider networks={networkConfig} defaultNetwork="mainnet">
       <WalletProvider
@@ -38,9 +36,6 @@ createRoot(document.getElementById('root')).render(
         storage={localStorage}
         storageKey="sui-wallet"
         preferredWallets={["Sui Wallet"]}
-        stashedWallet={{
-          name: 'Bucket Protocol',
-        }}
       >
         <ConfigProvider
           theme={{
@@ -59,3 +54,5 @@ createRoot(document.getElementById('root')).render(
     </SuiClientProvider>
   </QueryClientProvider>
 );
+
+createRoot(rootElement).render(<AppRoot />); 

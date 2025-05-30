@@ -9,7 +9,7 @@ import rank7 from '@/images/ranks/rank-7.png';
 
 const RANKS = [rank0, rank1, rank2, rank3, rank4, rank5, rank6, rank7];
 
-const Ranking = ({ rank, size = 32 }) => {
+const Ranking = ({ rank, size = 32 }: { rank: number, size: number }) => {
   return <img src={RANKS[rank]} alt={`Rank ${rank}`} width={size} />;
 };
 

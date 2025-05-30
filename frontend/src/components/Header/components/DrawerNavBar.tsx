@@ -5,9 +5,16 @@ import { Flex } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { HeaderUrl } from './../data/HeaderUrl';
+import { HeaderUrl } from '../data/HeaderUrl';
+import { Theme } from '@/utils/theme';
+import { MouseEventHandler, RefCallback } from 'react';
 
-const DrawerContainer = styled.div`
+
+export interface DrawerContainerProps {
+  open: boolean,
+  theme: Theme
+}
+const DrawerContainer = styled.div<DrawerContainerProps>`
   position: fixed;
   top: 64px;
   left: 0;
@@ -40,7 +47,17 @@ const DrawerContainer = styled.div`
   }
 `;
 
-export default function DrawerNavBar({ open, isLoggedIn, handleOpenConnectWallet, signOut, address }) {
+
+export default function DrawerNavBar({ open, isLoggedIn, handleOpenConnectWallet, signOut, address }
+  :
+  {
+    open: boolean,
+    isLoggedIn: boolean,
+    handleOpenConnectWallet: MouseEventHandler<any> | undefined,
+    signOut: Function,
+    address: string,
+  }
+) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -69,7 +86,7 @@ export default function DrawerNavBar({ open, isLoggedIn, handleOpenConnectWallet
           {shorten(address)} <LogoutOutlined />
         </Flex>
       ) : (
-        <Button variant='secondary' onClick={handleOpenConnectWallet}>
+        <Button variant='secondary' onClick={handleOpenConnectWallet} disabled={false}>
           Connect Wallet
         </Button>
       )}

@@ -1,10 +1,19 @@
+import { theme, Theme } from '@/utils/theme';
+import { MouseEventHandler } from 'react';
 import styled from 'styled-components';
 
-const StyledButton = styled.button`
+interface ButtonProps {
+  variant: string | React.ReactNode,
+  children: React.ReactNode,
+  theme: Theme,
+  disabled: boolean
+}
+
+const StyledButton = styled.button<ButtonProps>`
   border: none;
   border-radius: 0.5em;
   padding: 8px 16px;
-  font-weight: ${({ theme }) => theme.fontWeight.bold};
+  font-weight: ${({ theme }: { theme: Theme }) => String(theme.fontWeight.bold)};
   cursor: pointer;
   position: relative;
   transition: all 0.5s ease;
@@ -13,7 +22,7 @@ const StyledButton = styled.button`
     transform: scale(1.1);
   }
 
-  ${({ variant, theme }) => {
+  ${({ variant, theme }: { variant: any, theme: Theme }) => {
     switch (variant) {
       case 'primary':
         return `
@@ -54,20 +63,27 @@ const StyledButton = styled.button`
         return '';
     }
   }}
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    &:hover {
-      box-shadow: none;
-      background: white !important;
-    }
-  }
+
+  ${({ disabled }: { disabled: boolean }) => {
+    if (!disabled) return ``;
+    return `
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        &:hover {
+          box-shadow: none;
+          background: white !important;
+          }
+      }`
+  }}
+ 
 `;
 
-export default function Button({ variant, ...props }) {
+export default function Button({ variant, children, disabled = false, onClick = () => { } }:
+  { variant: string, children: React.ReactNode, disabled: boolean, onClick: (MouseEventHandler<any> | undefined) }) {
   return (
-      <StyledButton variant={variant} {...props}>
-        <div>{props.children}</div>
-      </StyledButton>
+    <StyledButton variant={variant} theme={theme} disabled={disabled} onClick={onClick}>
+      <div>{children}</div>
+    </StyledButton>
   );
 }
