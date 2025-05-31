@@ -1,7 +1,14 @@
+import { theme, Theme } from '@/utils/theme';
 import { useState } from 'react';
 import styled from 'styled-components';
 
-const ToggleContainer = styled.div`
+
+export interface ToggleContainerProps {
+  theme: Theme,
+  className?: string,
+  onClick?: () => void,
+}
+const ToggleContainer = styled.div<ToggleContainerProps>`
   position: relative;
   width: 50px;
   height: 47px;
@@ -58,7 +65,7 @@ export default function ButtonNavBar() {
   };
 
   return (
-    <ToggleContainer className={isActive ? 'active' : ''} onClick={handleToggleClick}>
+    <ToggleContainer theme={theme} className={isActive ? 'active' : ''} onClick={handleToggleClick}>
       <ToggleSpan />
       <ToggleSpan />
       <ToggleSpan />
